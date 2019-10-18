@@ -1,3 +1,5 @@
+load("@perf_data_converter_deps//debs:deb_packages.bzl", "perf_data_converter_deps")
+
 package(
     default_visibility = [
         "//src:__subpackages__",
@@ -123,9 +125,12 @@ cc_library(
 cc_binary(
     name = "perf_to_profile",
     srcs = ["perf_to_profile.cc"],
+    copts = ["-I$(GENDIR)"],
     deps = [
         ":perf_data_converter",
         ":perf_to_profile_lib",
+        ":libelf_dev",
+        ":libcap_dev",
         "//src/quipper:base",
     ],
 )
@@ -164,6 +169,68 @@ cc_library(
         "@com_google_protobuf//:protobuf",
         "@zlib//:zlib",
     ],
+)
+
+cc_import(
+    name = "libelf_dev",
+    hdrs = [
+        ":libelf_dev_extract",
+    ],
+)
+
+cc_import(
+    name = "libcap_dev",
+    hdrs = [
+        ":libcap_dev_extract",
+    ],
+)
+
+filegroup(
+    name = "libelf_dev_deb",
+    srcs = [
+        perf_data_converter_deps["libelf-dev"],
+    ],
+)
+
+filegroup(
+    name = "libcap_dev_deb",
+    srcs = [
+        perf_data_converter_deps["libcap-dev"],
+    ],
+)
+
+genrule(
+    name = "libelf_dev_extract",
+    srcs = [
+        ":libelf_dev_deb",
+    ],
+    outs = [
+        "gelf.h",
+        "libelf.h",
+        "nlist.h",
+    ],
+    cmd = """
+ar xv $(location :libelf_dev_deb) \
+&& tar xvf data.tar.xz \
+&& cp ./usr/include/gelf.h $(location gelf.h) \
+&& cp ./usr/include/libelf.h $(location libelf.h) \
+&& cp ./usr/include/nlist.h $(location nlist.h)""",
+    output_to_bindir = False,
+)
+
+genrule(
+    name = "libcap_dev_extract",
+    srcs = [
+        ":libcap_dev_deb"
+    ],
+    outs = [
+        "capability.h",
+    ],
+    cmd = """
+ar xv $(location :libcap_dev_deb) \
+&& tar xvf data.tar.xz \
+&& cp ./usr/include/sys/capability.h $(location capability.h)""",
+    output_to_bindir = False,
 )
 
 test_suite(name = "AllTests")

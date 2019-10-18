@@ -55,3 +55,34 @@ http_archive(
     urls = ["https://github.com/google/re2/archive/master.zip"],
     strip_prefix = "re2-master",
 )
+
+
+load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
+git_repository(
+    name = "rules_deb_packages",
+    commit = "b8d6ea0a5465973ce0970f6e063dfebea473732c",
+    remote = "https://github.com/bazelbuild/rules_pkg/",
+)
+
+# libelf-dev and libcap-dev are dependencies of perf_to_profile.
+load("@rules_deb_packages//deb_packages:deb_packages.bzl", "deb_packages")
+deb_packages(
+    name = "perf_data_converter_deps",
+    arch = "amd64",
+    distro = "buster",
+    distro_type = "debian",
+    mirrors = [
+        "http://deb.debian.org/debian",
+        "http://ftp.us.debian.org/debian/",
+        "http://ftp.jp.debian.org/debian",
+    ],
+    components = ["main"],
+    packages = {
+        "libelf-dev": "pool/main/e/elfutils/libelf-dev_0.176-1.1_amd64.deb",
+        "libcap-dev": "pool/main/libc/libcap2/libcap-dev_2.25-2_amd64.deb",
+    },
+    packages_sha256 = {
+        "libelf-dev": "eb97d5dff2db99ef44f13cc3151b3f0a666e2c96093d5e32340914608d874a59",
+        "libcap-dev": "4578be676cc590c776d67c288201f640bfb4ad1cd93943968f6ac14896c9fa4d",
+    },
+)

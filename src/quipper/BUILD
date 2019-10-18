@@ -111,13 +111,18 @@ cc_library(
 cc_library(
     name = "dso",
     srcs = ["dso.cc"],
-    hdrs = ["dso.h"],
+    hdrs = [
+        "dso.h",
+        "//src:libelf_dev_extract",
+    ],
     visibility = ["//src:__subpackages__"],
+    copts = ["-I$(GENDIR)"],
     deps = [
         ":compat",
         ":data_reader",
         ":file_reader",
         ":base",
+        "//src:libelf_dev",
     ],
     linkopts = ["-lelf"],
 )
